@@ -11,6 +11,29 @@ exports.formatDates = list => {
   return newArr;
 };
 
-exports.makeRefObj = list => {};
+exports.makeRefObj = (list, key, value) => {
+  if (list.length === 0) return {};
 
-exports.formatComments = (comments, articleRef) => {};
+  return list.reduce((refObj, currObj) => {
+    const refKey = currObj[key];
+    const refValue = currObj[value];
+    refObj[refKey] = refValue;
+    return refObj;
+  }, {});
+};
+
+exports.formatComments = (comments, articleRef) => {
+  if (comments.length === 0) return [];
+
+  const newArr = comments.map(object => {
+    const newObj = { ...object };
+    newObj.author = newObj.created_by;
+    delete newObj.created_by;
+    newObj.article_id = articleRef[object.belongs_to];
+    delete newObj.belongs_to;
+
+    newObj.created_at = new Date(newObj.created_at);
+    return newObj;
+  });
+  return newArr;
+};
