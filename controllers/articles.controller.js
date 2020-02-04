@@ -1,21 +1,13 @@
-const {
-  selectArticle,
-  getCommentCountByArticleID,
-  updateArticle
-} = require('../models/articles.model');
+const { selectArticle, updateArticle } = require('../models/articles.model');
+const { selectUser } = require('../models/users.model');
+const { selectComments, addComment } = require('../models/comments.model');
 
-const { getComments, addComment } = require('../models/comments.model');
-
-exports.getArticleByArticleID = (req, res, next) => {
-  //console.log('in article controller');
+exports.getArticle = (req, res, next) => {
   const { article_id } = req.params;
-  return Promise.all([
-    selectArticle(article_id),
-    getCommentCountByArticleID(article_id)
-  ])
-    .then(([articleData, commentCount]) => {
-      const articleObj = { ...articleData, comment_count: commentCount };
-      res.send(articleObj);
+  return Promise.all([selectArticle(article_id), selectComments(article_id)])
+    .then(([articleData, commentsData]) => {
+      articleData[0].comment_count = commentsData.length;
+      res.send({ article: articleData });
     })
     .catch(err => {
       next(err);
@@ -27,27 +19,27 @@ exports.patchArticle = (req, res, next) => {
   const { inc_votes } = req.body;
   return updateArticle(article_id, inc_votes)
     .then(updatedArticle => {
-      res.status(202).send(updatedArticle);
+      res.status(202).send({ updatedArticle: updatedArticle });
     })
     .catch(err => {
       next(err);
     });
 };
 
-exports.postCommentByArticleID = (req, res, next) => {
+exports.postComment = (req, res, next) => {
   const { article_id } = req.params;
-  return selectArticle(article_id)
-    .then(articleData => {
-      for (key in req.body) {
-        if (articleData.author === key) {
-          return addComment(req.body, articleData.article_id).then(
-            addedComment => {
-              const comment = addedComment[0].body;
-              res.status(201).send({ msg: comment });
-            }
-          );
-        } else
-          return Promise.reject({ status: 400, msg: 'invalid username input' });
+  let username;
+  for (key in req.body) {
+    username = key;
+  }
+  return Promise.all([selectArticle(article_id), selectUser(username)])
+    .then(([articleData, userData]) => {
+      if (userData.length !== 0) {
+        return addComment(req.body, articleData.article_id).then(
+          addedComment => {
+            res.status(201).send({ addedComment: addedComment });
+          }
+        );
       }
     })
     .catch(err => {

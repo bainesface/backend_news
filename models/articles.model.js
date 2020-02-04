@@ -1,8 +1,6 @@
 const connection = require('../connection');
 
 exports.selectArticle = id => {
-  //console.log(id);
-  //console.log('in article model');
   return connection
     .select('*')
     .from('articles')
@@ -11,18 +9,7 @@ exports.selectArticle = id => {
       if (articleData.length === 0) {
         return Promise.reject({ status: 404, msg: 'article id not found' });
       }
-      const [data] = articleData;
-      return data;
-    });
-};
-
-exports.getCommentCountByArticleID = id => {
-  return connection
-    .select('*')
-    .from('comments')
-    .where('article_id', '=', id)
-    .then(result => {
-      return result.length;
+      return articleData;
     });
 };
 
@@ -38,7 +25,6 @@ exports.updateArticle = (id, votesToAdd) => {
       if (result.length === 0) {
         return Promise.reject({ status: 404, msg: 'article id not found' });
       }
-      const [updatedArticle] = result;
-      return updatedArticle;
+      return result;
     });
 };

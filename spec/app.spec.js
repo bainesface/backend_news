@@ -28,7 +28,11 @@ describe('/api', () => {
         .expect(200)
         .then(({ body }) => {
           expect(body).to.be.an('object');
-          expect(body).to.contain.keys('username', 'avatar_url', 'name');
+          expect(body.user[0]).to.contain.keys(
+            'username',
+            'avatar_url',
+            'name'
+          );
         });
     });
     it('GET: returns status 404 and relevant error message when the username inputted cannot be found', () => {
@@ -47,7 +51,7 @@ describe('/api', () => {
         .expect(200)
         .then(({ body }) => {
           expect(body).to.be.an('object');
-          expect(body).to.contain.keys(
+          expect(body.article[0]).to.contain.keys(
             'author',
             'title',
             'article_id',
@@ -82,8 +86,8 @@ describe('/api', () => {
         .send(patchInput)
         .expect(202)
         .then(({ body }) => {
-          expect(body.votes).to.equal(155);
-          expect(body.author).to.equal('butter_bridge');
+          expect(body.updatedArticle[0].votes).to.equal(155);
+          expect(body.updatedArticle[0].author).to.equal('butter_bridge');
         });
     });
     it('PATCH: returns a status 406 and relevant error message when the input value in non-numerical', () => {
@@ -115,7 +119,7 @@ describe('/api', () => {
         .send(postInput)
         .expect(201)
         .then(({ body }) => {
-          expect(body.msg).to.equal('very informative');
+          expect(body.addedComment[0].body).to.equal('very informative');
         });
     });
     it('POST: returns 404 and a relevant message when the article id is valid but not found', () => {
@@ -138,14 +142,14 @@ describe('/api', () => {
           expect(body.msg).to.equal('invalid article id input');
         });
     });
-    it('POST: returns 400 and a relevant error message when the author in the input object cannot be found', () => {
+    it('POST: returns 404 and a relevant error message when the author in the input object cannot be found', () => {
       const postInput = { dogface: 'very informative' };
       return request(app)
         .post('/api/articles/1/comments')
         .send(postInput)
-        .expect(400)
+        .expect(404)
         .then(({ body }) => {
-          expect(body.msg).to.equal('invalid username input');
+          expect(body.msg).to.equal('username not found');
         });
     });
     it('POST: returns 404 and a relevant error message when the comment in the input object is null', () => {
