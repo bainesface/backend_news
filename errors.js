@@ -2,8 +2,9 @@ exports.handlePSQLErrors = (err, req, res, next) => {
   if (err.code !== undefined) {
     console.log('psql code', err.code);
     const PSQLcodes = {
-      '22P02': { status: 400, msg: 'invalid article id input' },
-      '23502': { status: 404, msg: 'please add a comment' }
+      '22P02': { status: 400, msg: 'invalid id input' },
+      '23502': { status: 404, msg: 'please add a comment' },
+      '42703': { status: 400, msg: 'invalid query, column does not exist' }
     };
     const statusToSend = PSQLcodes[err.code].status;
     const messageToSend = PSQLcodes[err.code].msg;

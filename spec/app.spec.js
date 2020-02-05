@@ -1,6 +1,8 @@
 process.env.NODE_ENV = 'test';
 const app = require('../app');
-const { expect } = require('chai');
+const chai = require('chai');
+const expect = chai.expect;
+chai.use(require('sams-chai-sorted'));
 const request = require('supertest');
 const connection = require('../connection');
 
@@ -76,7 +78,7 @@ describe('/api', () => {
         .get('/api/articles/hola')
         .expect(400)
         .then(({ body }) => {
-          expect(body.msg).to.equal('invalid article id input');
+          expect(body.msg).to.equal('invalid id input');
         });
     });
     it('PATCH: returns a status 202, updating the number of votes for the article id passed, and returning the updated object', () => {
@@ -139,7 +141,7 @@ describe('/api', () => {
         .send(postInput)
         .expect(400)
         .then(({ body }) => {
-          expect(body.msg).to.equal('invalid article id input');
+          expect(body.msg).to.equal('invalid id input');
         });
     });
     it('POST: returns 404 and a relevant error message when the author in the input object cannot be found', () => {
@@ -160,6 +162,222 @@ describe('/api', () => {
         .expect(404)
         .then(({ body }) => {
           expect(body.msg).to.equal('please add a comment');
+        });
+    });
+    it('GET: returns a status 200 with an object containing an array of comment objects', () => {
+      return request(app)
+        .get('/api/articles/1/comments')
+        .expect(200)
+        .then(({ body }) => {
+          body.comments.forEach(comment =>
+            expect(comment).to.contain.keys(
+              'comment_id',
+              'votes',
+              'created_at',
+              'author',
+              'body'
+            )
+          );
+        });
+    });
+    it('GET: returns status 200 and an object containing empty array when the article id is valid but no comments are found', () => {
+      return request(app)
+        .get('/api/articles/3/comments')
+        .expect(200)
+        .then(({ body }) => {
+          expect(body.comments).to.deep.equal([]);
+        });
+    });
+    it('GET: returns status 404 and the relevant error message when the input article id is valid but does not exists', () => {
+      return request(app)
+        .get('/api/articles/3670/comments')
+        .expect(404)
+        .then(({ body }) => {
+          expect(body.msg).to.equal('article id not found');
+        });
+    });
+    it('GET: returns status 400 when the article id is an invalid input', () => {
+      return request(app)
+        .get('/api/articles/favearticle/comments')
+        .expect(400)
+        .then(({ body }) => {
+          expect(body.msg).to.equal('invalid id input');
+        });
+    });
+    it('GET: returns status 200 and orders the comments by most recent (or descending) by default', () => {
+      return request(app)
+        .get('/api/articles/1/comments')
+        .expect(200)
+        .then(({ body }) => {
+          expect(body.comments).to.be.sortedBy('created_at', {
+            descending: true
+          });
+        });
+    });
+    it('GET: returns a status 200 and orders the comments based on the query passed, for this example alphabetically by author', () => {
+      return request(app)
+        .get('/api/articles/1/comments?sort_by=author&order=asc')
+        .expect(200)
+        .then(({ body }) => {
+          expect(body.comments).to.be.sortedBy('author');
+        });
+    });
+    it('GET: returns status 400 and the appropriate error message when asked to sort by a column that does not exist', () => {
+      return request(app)
+        .get('/api/articles/1/comments?sort_by=ideas')
+        .expect(400)
+        .then(({ body }) => {
+          expect(body.msg).to.equal('invalid query, column does not exist');
+        });
+    });
+  });
+  describe('/articles', () => {
+    it('GET: returns status 200 and an array of article objects', () => {
+      return request(app)
+        .get('/api/articles')
+        .expect(200)
+        .then(({ body }) => {
+          body.articles.forEach(article => {
+            expect(article).to.contain.keys(
+              'author',
+              'title',
+              'article_id',
+              'topic',
+              'created_at',
+              'votes',
+              'comment_count'
+            );
+          });
+        });
+    });
+    it('GET: returns status 200 and the articles array sorted by the most recent created when no query is passed', () => {
+      return request(app)
+        .get('/api/articles')
+        .expect(200)
+        .then(({ body }) => {
+          expect(body.articles).to.be.sortedBy('created_at', {
+            descending: true
+          });
+        });
+    });
+    it('GET: returns status 200 and the articles array filterd by username passed in the query', () => {
+      return request(app)
+        .get('/api/articles?username=butter_bridge')
+        .expect(200)
+        .then(({ body }) => {
+          body.articles.forEach(article => {
+            expect(article.author).to.equal('butter_bridge');
+          });
+        });
+    });
+    it('GET: returns status 200 and an object containing an empty array when the user exists but has posted no articles', () => {
+      return request(app)
+        .get('/api/articles?username=lurker')
+        .expect(200)
+        .then(({ body }) => {
+          expect(body.articles).to.deep.equal([]);
+        });
+    });
+    it('GET: returns status 404 and the appropriate error message when passed a username that does not exist', () => {
+      return request(app)
+        .get('/api/articles/?username=letmein')
+        .expect(404)
+        .then(({ body }) => {
+          expect(body.msg).to.equal('username does not exist');
+        });
+    });
+    it('GET: returns status 200 and the articles array filtered by the topic value passed in the query', () => {
+      return request(app)
+        .get('/api/articles?topic=mitch')
+        .expect(200)
+        .then(({ body }) => {
+          body.articles.forEach(article => {
+            expect(article.topic).to.equal('mitch');
+          });
+        });
+    });
+    it('GET: returns status 200 and an object containing an empty array when a topic exists but no articles are written about it', () => {
+      return request(app)
+        .get('/api/articles?topic=paper')
+        .expect(200)
+        .then(({ body }) => {
+          expect(body.articles).to.deep.equal([]);
+        });
+    });
+    it('GET: returns status 404 and the appropriate error message when passed a topic that does not exist', () => {
+      return request(app)
+        .get('/api/articles/?topic=hiya')
+        .expect(404)
+        .then(({ body }) => {
+          expect(body.msg).to.equal('topic does not exist');
+        });
+    });
+  });
+  describe('/comments/:comment_id', () => {
+    it('PATCH: returns a status 202, updating the number of votes for the comment id passed, and returning the updated object', () => {
+      const patchInput = { inc_votes: 1 };
+      return request(app)
+        .patch('/api/comments/1')
+        .send(patchInput)
+        .expect(202)
+        .then(({ body }) => {
+          expect(body.updatedComment[0].votes).to.equal(17);
+          expect(body.updatedComment[0].author).to.equal('butter_bridge');
+        });
+    });
+    it('PATCH: returns status 406 and the relevant error message when the input value in non-numerical', () => {
+      const patchInput = { inc_votes: 'addme' };
+      return request(app)
+        .patch('/api/comments/1')
+        .send(patchInput)
+        .expect(406)
+        .then(({ body }) => {
+          expect(body.msg).to.equal('votes need to be numerical');
+        });
+    });
+    it('PATCH: returns status 404 and an approriate error message when the comment id is valid but does not exist', () => {
+      const patchInput = { inc_votes: 1 };
+      return request(app)
+        .patch('/api/comments/87655')
+        .send(patchInput)
+        .expect(404)
+        .then(({ body }) => {
+          expect(body.msg).to.equal('comment id does not exist');
+        });
+    });
+    it('PATCH: returns status 400 and an appropriate error message when the comment id is an invalid input', () => {
+      const patchInput = { inc_votes: 1 };
+      return request(app)
+        .patch('/api/comments/commentshere')
+        .send(patchInput)
+        .expect(400)
+        .then(({ body }) => {
+          expect(body.msg).to.equal('invalid id input');
+        });
+    });
+    it('DELETE: returns status 204 and no content', () => {
+      return request(app)
+        .delete('/api/comments/1')
+        .expect(204)
+        .then(response => {
+          //console.log(response);
+          expect(response.body).to.deep.equal({});
+        });
+    });
+    it('DELETE: returns status 404 and a relevant error messgae when the comment id is valid but does not exist', () => {
+      return request(app)
+        .delete('/api/comments/98787576')
+        .expect(404)
+        .then(({ body }) => {
+          expect(body.msg).to.equal('comment id not found');
+        });
+    });
+    it('DELETE: returns status 406 and the relevant error message when the comment id is an invalid input', () => {
+      return request(app)
+        .delete('/api/comments/deleteme')
+        .expect(400)
+        .then(({ body }) => {
+          expect(body.msg).to.equal('invalid id input');
         });
     });
   });

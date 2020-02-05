@@ -1,8 +1,12 @@
-const { selectArticle, updateArticle } = require('../models/articles.model');
+const {
+  selectArticle,
+  updateArticle,
+  selectArticles
+} = require('../models/articles.model');
 const { selectUser } = require('../models/users.model');
 const { selectComments, addComment } = require('../models/comments.model');
 
-exports.getArticle = (req, res, next) => {
+exports.getArticleByArticleID = (req, res, next) => {
   const { article_id } = req.params;
   return Promise.all([selectArticle(article_id), selectComments(article_id)])
     .then(([articleData, commentsData]) => {
@@ -35,13 +39,40 @@ exports.postComment = (req, res, next) => {
   return Promise.all([selectArticle(article_id), selectUser(username)])
     .then(([articleData, userData]) => {
       if (userData.length !== 0) {
-        return addComment(req.body, articleData.article_id).then(
-          addedComment => {
-            res.status(201).send({ addedComment: addedComment });
-          }
-        );
+        return addComment(req.body, articleData.article_id);
       }
     })
+    .then(addedComment => {
+      res.status(201).send({ addedComment: addedComment });
+    })
+    .catch(err => {
+      next(err);
+    });
+};
+
+exports.getCommentsByArticleID = (req, res, next) => {
+  const { article_id } = req.params;
+  const { sort_by, order } = req.query;
+  return selectComments(article_id, sort_by, order)
+    .then(comments => {
+      comments.forEach(comment => {
+        delete comment.article_id;
+        return comment;
+      });
+      res.send({ comments: comments });
+    })
+    .catch(err => {
+      next(err);
+    });
+};
+
+exports.getArticles = (req, res, next) => {
+  const { sort_by, order, username, topic } = req.query;
+  return selectArticles(sort_by, order, username, topic)
+    .then(articles => {
+      res.send({ articles: articles });
+    })
+
     .catch(err => {
       next(err);
     });

@@ -12,3 +12,19 @@ exports.selectUser = username => {
       return result;
     });
 };
+
+exports.checkIfUserExists = username => {
+  return connection
+    .select('*')
+    .from('users')
+    .modify(querySoFar => {
+      if (username !== undefined)
+        querySoFar.where({ 'users.username': username });
+    })
+    .then(user => {
+      if (user.length === 0) {
+        return false;
+      }
+      return true;
+    });
+};
