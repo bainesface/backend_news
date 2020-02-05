@@ -4,6 +4,12 @@ const { checkIfArticleExists } = require('./articles.model');
 exports.selectComments = (id, sort_by, order) => {
   if (order === undefined) order = 'desc';
   if (sort_by === undefined) sort_by = 'created_at';
+  if (order !== 'asc' && order !== 'desc') {
+    return Promise.reject({
+      status: 400,
+      msg: "order must be 'asc' or 'desc'"
+    });
+  }
   return connection
     .select('*')
     .from('comments')

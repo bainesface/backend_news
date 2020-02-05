@@ -47,6 +47,12 @@ exports.checkIfArticleExists = article_id => {
 exports.selectArticles = (sort_by, order, username, topic) => {
   if (order === undefined) order = 'desc';
   if (sort_by === undefined) sort_by = 'created_at';
+  if (order !== 'asc' && order !== 'desc') {
+    return Promise.reject({
+      status: 400,
+      msg: "order must be 'asc' or 'desc'"
+    });
+  }
 
   return connection
     .select('articles.*')

@@ -92,6 +92,17 @@ describe('/api', () => {
           expect(body.updatedArticle[0].author).to.equal('butter_bridge');
         });
     });
+    it('PATCH: returns a status 202, decreasing number of votes for the article id passed when passed a negative number, returning the updated objects ', () => {
+      const patchInput = { inc_votes: -55 };
+      return request(app)
+        .patch('/api/articles/1')
+        .send(patchInput)
+        .expect(202)
+        .then(({ body }) => {
+          expect(body.updatedArticle[0].votes).to.equal(45);
+          expect(body.updatedArticle[0].author).to.equal('butter_bridge');
+        });
+    });
     it('PATCH: returns a status 406 and relevant error message when the input value in non-numerical', () => {
       const patchInput = { inc_votes: 'more votes' };
       return request(app)
@@ -110,6 +121,16 @@ describe('/api', () => {
         .expect(404)
         .then(({ body }) => {
           expect(body.msg).to.equal('article id not found');
+        });
+    });
+    it('PATCH: returns status 400 and the relevant error message when the article id is an invalid input', () => {
+      const patchInput = { inc_votes: 55 };
+      return request(app)
+        .patch('/api/articles/thisarticle')
+        .send(patchInput)
+        .expect(400)
+        .then(({ body }) => {
+          expect(body.msg).to.equal('invalid id input');
         });
     });
   });
@@ -230,6 +251,14 @@ describe('/api', () => {
           expect(body.msg).to.equal('invalid query, column does not exist');
         });
     });
+    it("GET returns 400 and a message telling the user to give correct input when order is set to something other than 'asc' or 'desc'", () => {
+      return request(app)
+        .get('/api/articles/1/comments?order=ascending')
+        .expect(400)
+        .then(({ body }) => {
+          expect(body.msg).to.equal("order must be 'asc' or 'desc'");
+        });
+    });
   });
   describe('/articles', () => {
     it('GET: returns status 200 and an array of article objects', () => {
@@ -258,6 +287,14 @@ describe('/api', () => {
           expect(body.articles).to.be.sortedBy('created_at', {
             descending: true
           });
+        });
+    });
+    it("GET returns 400 and a message telling the user to give correct input when order is set to something other than 'asc' or 'desc'", () => {
+      return request(app)
+        .get('/api/articles?order=ascending')
+        .expect(400)
+        .then(({ body }) => {
+          expect(body.msg).to.equal("order must be 'asc' or 'desc'");
         });
     });
     it('GET: returns status 200 and the articles array filterd by username passed in the query', () => {
@@ -306,7 +343,7 @@ describe('/api', () => {
     });
     it('GET: returns status 404 and the appropriate error message when passed a topic that does not exist', () => {
       return request(app)
-        .get('/api/articles/?topic=hiya')
+        .get('/api/articles?topic=hiya')
         .expect(404)
         .then(({ body }) => {
           expect(body.msg).to.equal('topic does not exist');
@@ -322,6 +359,17 @@ describe('/api', () => {
         .expect(202)
         .then(({ body }) => {
           expect(body.updatedComment[0].votes).to.equal(17);
+          expect(body.updatedComment[0].author).to.equal('butter_bridge');
+        });
+    });
+    it('PATCH: returns a status 202, decreasing the number of votes for the comment passed, and returning the updated object', () => {
+      const patchInput = { inc_votes: -1 };
+      return request(app)
+        .patch('/api/comments/1')
+        .send(patchInput)
+        .expect(202)
+        .then(({ body }) => {
+          expect(body.updatedComment[0].votes).to.equal(15);
           expect(body.updatedComment[0].author).to.equal('butter_bridge');
         });
     });
@@ -360,7 +408,6 @@ describe('/api', () => {
         .delete('/api/comments/1')
         .expect(204)
         .then(response => {
-          //console.log(response);
           expect(response.body).to.deep.equal({});
         });
     });
@@ -372,7 +419,7 @@ describe('/api', () => {
           expect(body.msg).to.equal('comment id not found');
         });
     });
-    it('DELETE: returns status 406 and the relevant error message when the comment id is an invalid input', () => {
+    it('DELETE: returns status 400 and the relevant error message when the comment id is an invalid input', () => {
       return request(app)
         .delete('/api/comments/deleteme')
         .expect(400)
