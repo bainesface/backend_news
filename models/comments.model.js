@@ -42,13 +42,13 @@ exports.addComment = (body, article_id) => {
     .insert(commentObj)
     .returning('*')
     .then(result => {
-      return result;
+      return result[0];
     });
 };
 
 exports.updateComment = (id, num) => {
   if (typeof num !== 'number') {
-    return Promise.reject({ status: 406, msg: 'votes need to be numerical' });
+    return Promise.reject({ status: 400, msg: 'votes need to be numerical' });
   }
   return connection('comments')
     .where('comment_id', '=', id)

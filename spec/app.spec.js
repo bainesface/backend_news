@@ -22,19 +22,27 @@ describe('/api', () => {
           );
         });
     });
+    it('status: 405', () => {
+      const invalidMethods = ['patch', 'put', 'post', 'delete'];
+      const methodPromises = invalidMethods.map(method => {
+        return request(app)
+          [method]('/api/topics')
+          .expect(405)
+          .then(({ body: { msg } }) => {
+            expect(msg).to.equal('method not allowed');
+          });
+      });
+      return Promise.all(methodPromises);
+    });
   });
-  describe('/users:username', () => {
+  describe('/users/:username', () => {
     it('GET: returns a status 200 and an object containing user information', () => {
       return request(app)
         .get('/api/users/butter_bridge')
         .expect(200)
         .then(({ body }) => {
           expect(body).to.be.an('object');
-          expect(body.user[0]).to.contain.keys(
-            'username',
-            'avatar_url',
-            'name'
-          );
+          expect(body.user).to.contain.keys('username', 'avatar_url', 'name');
         });
     });
     it('GET: returns status 404 and relevant error message when the username inputted cannot be found', () => {
@@ -45,6 +53,18 @@ describe('/api', () => {
           expect(body.msg).to.equal('username not found');
         });
     });
+    it('status: 405', () => {
+      const invalidMethods = ['patch', 'put', 'post', 'delete'];
+      const methodPromises = invalidMethods.map(method => {
+        return request(app)
+          [method]('/api/users/:username')
+          .expect(405)
+          .then(({ body: { msg } }) => {
+            expect(msg).to.equal('method not allowed');
+          });
+      });
+      return Promise.all(methodPromises);
+    });
   });
   describe('/articles/:article_id', () => {
     it('GET: returns a status 200 and an object containing the article object', () => {
@@ -53,7 +73,8 @@ describe('/api', () => {
         .expect(200)
         .then(({ body }) => {
           expect(body).to.be.an('object');
-          expect(body.article[0]).to.contain.keys(
+          expect(body.article).to.be.an('object');
+          expect(body.article).to.have.keys(
             'author',
             'title',
             'article_id',
@@ -63,6 +84,28 @@ describe('/api', () => {
             'votes',
             'comment_count'
           );
+          expect(body.article.author).to.equal('butter_bridge');
+          expect(body.article.comment_count).to.equal('13');
+        });
+    });
+    it('GET: returns a status 200 and an object containing the article object, with the comment count set to zero when no comments found for specified article', () => {
+      return request(app)
+        .get('/api/articles/2')
+        .expect(200)
+        .then(({ body }) => {
+          expect(body).to.be.an('object');
+          expect(body.article).to.be.an('object');
+          expect(body.article).to.have.keys(
+            'author',
+            'title',
+            'article_id',
+            'body',
+            'topic',
+            'created_at',
+            'votes',
+            'comment_count'
+          );
+          expect(body.article.comment_count).to.equal('0');
         });
     });
     it('GET: returns a status 404 and relevant error message when the article id is valid but not found', () => {
@@ -81,34 +124,34 @@ describe('/api', () => {
           expect(body.msg).to.equal('invalid id input');
         });
     });
-    it('PATCH: returns a status 202, updating the number of votes for the article id passed, and returning the updated object', () => {
+    it('PATCH: returns a status 200, updating the number of votes for the article id passed, and returning the updated object', () => {
       const patchInput = { inc_votes: 55 };
       return request(app)
         .patch('/api/articles/1')
         .send(patchInput)
-        .expect(202)
+        .expect(200)
         .then(({ body }) => {
-          expect(body.updatedArticle[0].votes).to.equal(155);
-          expect(body.updatedArticle[0].author).to.equal('butter_bridge');
+          expect(body.article.votes).to.equal(155);
+          expect(body.article.author).to.equal('butter_bridge');
         });
     });
-    it('PATCH: returns a status 202, decreasing number of votes for the article id passed when passed a negative number, returning the updated objects ', () => {
+    it('PATCH: returns a status 200, decreasing number of votes for the article id passed when passed a negative number, returning the updated objects ', () => {
       const patchInput = { inc_votes: -55 };
       return request(app)
         .patch('/api/articles/1')
         .send(patchInput)
-        .expect(202)
+        .expect(200)
         .then(({ body }) => {
-          expect(body.updatedArticle[0].votes).to.equal(45);
-          expect(body.updatedArticle[0].author).to.equal('butter_bridge');
+          expect(body.article.votes).to.equal(45);
+          expect(body.article.author).to.equal('butter_bridge');
         });
     });
-    it('PATCH: returns a status 406 and relevant error message when the input value in non-numerical', () => {
+    it('PATCH: returns a status 400 and relevant error message when the input value in non-numerical', () => {
       const patchInput = { inc_votes: 'more votes' };
       return request(app)
         .patch('/api/articles/1')
         .send(patchInput)
-        .expect(406)
+        .expect(400)
         .then(({ body }) => {
           expect(body.msg).to.equal('votes need to be numerical');
         });
@@ -133,6 +176,18 @@ describe('/api', () => {
           expect(body.msg).to.equal('invalid id input');
         });
     });
+    it('status: 405', () => {
+      const invalidMethods = ['put', 'post', 'delete'];
+      const methodPromises = invalidMethods.map(method => {
+        return request(app)
+          [method]('/api/articles/:article_id')
+          .expect(405)
+          .then(({ body: { msg } }) => {
+            expect(msg).to.equal('method not allowed');
+          });
+      });
+      return Promise.all(methodPromises);
+    });
   });
   describe('/articles/:article_id/comments', () => {
     it('POST: returns status 201 and returns the comment added', () => {
@@ -142,7 +197,7 @@ describe('/api', () => {
         .send(postInput)
         .expect(201)
         .then(({ body }) => {
-          expect(body.addedComment[0].body).to.equal('very informative');
+          expect(body.addedComment.body).to.equal('very informative');
         });
     });
     it('POST: returns 404 and a relevant message when the article id is valid but not found', () => {
@@ -180,7 +235,7 @@ describe('/api', () => {
       return request(app)
         .post('/api/articles/1/comments')
         .send(postInput)
-        .expect(404)
+        .expect(400)
         .then(({ body }) => {
           expect(body.msg).to.equal('please add a comment');
         });
@@ -259,6 +314,18 @@ describe('/api', () => {
           expect(body.msg).to.equal("order must be 'asc' or 'desc'");
         });
     });
+    it('status: 405', () => {
+      const invalidMethods = ['put', 'patch', 'delete'];
+      const methodPromises = invalidMethods.map(method => {
+        return request(app)
+          [method]('/api/articles/:article_id/comments')
+          .expect(405)
+          .then(({ body: { msg } }) => {
+            expect(msg).to.equal('method not allowed');
+          });
+      });
+      return Promise.all(methodPromises);
+    });
   });
   describe('/articles', () => {
     it('GET: returns status 200 and an array of article objects', () => {
@@ -297,9 +364,10 @@ describe('/api', () => {
           expect(body.msg).to.equal("order must be 'asc' or 'desc'");
         });
     });
-    it('GET: returns status 200 and the articles array filterd by username passed in the query', () => {
+
+    it('GET: returns status 200 and the articles array filterd by author passed in the query', () => {
       return request(app)
-        .get('/api/articles?username=butter_bridge')
+        .get('/api/articles?author=butter_bridge')
         .expect(200)
         .then(({ body }) => {
           body.articles.forEach(article => {
@@ -307,20 +375,22 @@ describe('/api', () => {
           });
         });
     });
-    it('GET: returns status 200 and an object containing an empty array when the user exists but has posted no articles', () => {
+
+    it('GET: returns status 200 and an object containing an empty array when the author exists but has posted no articles', () => {
       return request(app)
-        .get('/api/articles?username=lurker')
+        .get('/api/articles?author=lurker')
         .expect(200)
         .then(({ body }) => {
           expect(body.articles).to.deep.equal([]);
         });
     });
-    it('GET: returns status 404 and the appropriate error message when passed a username that does not exist', () => {
+
+    it('GET: returns status 404 and the appropriate error message when passed an author that does not exist', () => {
       return request(app)
-        .get('/api/articles/?username=letmein')
+        .get('/api/articles/?author=letmein')
         .expect(404)
         .then(({ body }) => {
-          expect(body.msg).to.equal('username does not exist');
+          expect(body.msg).to.equal('username not found');
         });
     });
     it('GET: returns status 200 and the articles array filtered by the topic value passed in the query', () => {
@@ -349,36 +419,48 @@ describe('/api', () => {
           expect(body.msg).to.equal('topic does not exist');
         });
     });
+    it('status: 405', () => {
+      const invalidMethods = ['patch', 'put', 'post', 'delete'];
+      const methodPromises = invalidMethods.map(method => {
+        return request(app)
+          [method]('/api/articles')
+          .expect(405)
+          .then(({ body: { msg } }) => {
+            expect(msg).to.equal('method not allowed');
+          });
+      });
+      return Promise.all(methodPromises);
+    });
   });
   describe('/comments/:comment_id', () => {
-    it('PATCH: returns a status 202, updating the number of votes for the comment id passed, and returning the updated object', () => {
+    it('PATCH: returns a status 200, updating the number of votes for the comment id passed, and returning the updated object', () => {
       const patchInput = { inc_votes: 1 };
       return request(app)
         .patch('/api/comments/1')
         .send(patchInput)
-        .expect(202)
+        .expect(200)
         .then(({ body }) => {
-          expect(body.updatedComment[0].votes).to.equal(17);
-          expect(body.updatedComment[0].author).to.equal('butter_bridge');
+          expect(body.comment.votes).to.equal(17);
+          expect(body.comment.author).to.equal('butter_bridge');
         });
     });
-    it('PATCH: returns a status 202, decreasing the number of votes for the comment passed, and returning the updated object', () => {
+    it('PATCH: returns a status 200, decreasing the number of votes for the comment passed, and returning the updated object', () => {
       const patchInput = { inc_votes: -1 };
       return request(app)
         .patch('/api/comments/1')
         .send(patchInput)
-        .expect(202)
+        .expect(200)
         .then(({ body }) => {
-          expect(body.updatedComment[0].votes).to.equal(15);
-          expect(body.updatedComment[0].author).to.equal('butter_bridge');
+          expect(body.comment.votes).to.equal(15);
+          expect(body.comment.author).to.equal('butter_bridge');
         });
     });
-    it('PATCH: returns status 406 and the relevant error message when the input value in non-numerical', () => {
+    it('PATCH: returns status 400 and the relevant error message when the input value in non-numerical', () => {
       const patchInput = { inc_votes: 'addme' };
       return request(app)
         .patch('/api/comments/1')
         .send(patchInput)
-        .expect(406)
+        .expect(400)
         .then(({ body }) => {
           expect(body.msg).to.equal('votes need to be numerical');
         });
@@ -403,6 +485,16 @@ describe('/api', () => {
           expect(body.msg).to.equal('invalid id input');
         });
     });
+    // it('PATCH: returns status 200 and returns the unchanged comment when only sent a number', () => {
+    //   const patchInput = { upmyvotes: 1 };
+    //   return request(app)
+    //     .patch('/api/comments/1')
+    //     .send(patchInput)
+    //     .expect(200)
+    //     .then(({ body }) => {
+    //       expect(body.votes).to.equal(16);
+    //     });
+    // });
     it('DELETE: returns status 204 and no content', () => {
       return request(app)
         .delete('/api/comments/1')
@@ -427,5 +519,37 @@ describe('/api', () => {
           expect(body.msg).to.equal('invalid id input');
         });
     });
+    it('status: 405', () => {
+      const invalidMethods = ['get', 'put', 'post'];
+      const methodPromises = invalidMethods.map(method => {
+        return request(app)
+          [method]('/api/comments/:comment_id')
+          .expect(405)
+          .then(({ body: { msg } }) => {
+            expect(msg).to.equal('method not allowed');
+          });
+      });
+      return Promise.all(methodPromises);
+    });
+  });
+  it('GET: returns status 200 and returns a JSON object describing all available endpints on the api', () => {
+    return request(app)
+      .get('/api')
+      .expect(200)
+      .then(({ body }) => {
+        expect(body.allEndpoints).to.be.an('object');
+      });
+  });
+  it('status: 405', () => {
+    const invalidMethods = ['patch', 'put', 'post', 'delete'];
+    const methodPromises = invalidMethods.map(method => {
+      return request(app)
+        [method]('/api')
+        .expect(405)
+        .then(({ body: { msg } }) => {
+          expect(msg).to.equal('method not allowed');
+        });
+    });
+    return Promise.all(methodPromises);
   });
 });

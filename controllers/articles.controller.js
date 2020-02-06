@@ -1,17 +1,18 @@
 const {
-  selectArticle,
   updateArticle,
-  selectArticles
+  selectArticles,
+  checkIfArticleExists,
+  selectArticle
 } = require('../models/articles.model');
 const { selectUser } = require('../models/users.model');
 const { selectComments, addComment } = require('../models/comments.model');
+const { selectTopics } = require('../models/topics.model');
 
-exports.getArticleByArticleID = (req, res, next) => {
+exports.getArticleByArticleId = (req, res, next) => {
   const { article_id } = req.params;
-  return Promise.all([selectArticle(article_id), selectComments(article_id)])
-    .then(([articleData, commentsData]) => {
-      articleData[0].comment_count = commentsData.length;
-      res.send({ article: articleData });
+  return selectArticle(article_id)
+    .then(article => {
+      res.send({ article: article });
     })
     .catch(err => {
       next(err);
@@ -23,7 +24,7 @@ exports.patchArticle = (req, res, next) => {
   const { inc_votes } = req.body;
   return updateArticle(article_id, inc_votes)
     .then(updatedArticle => {
-      res.status(202).send({ updatedArticle: updatedArticle });
+      res.send({ article: updatedArticle[0] });
     })
     .catch(err => {
       next(err);
@@ -36,7 +37,11 @@ exports.postComment = (req, res, next) => {
   for (key in req.body) {
     username = key;
   }
-  return Promise.all([selectArticle(article_id), selectUser(username)])
+  return Promise.all([
+    selectArticle(article_id),
+    selectUser(username),
+    checkIfArticleExists(article_id)
+  ])
     .then(([articleData, userData]) => {
       if (userData.length !== 0) {
         return addComment(req.body, articleData.article_id);
@@ -67,12 +72,17 @@ exports.getCommentsByArticleID = (req, res, next) => {
 };
 
 exports.getArticles = (req, res, next) => {
-  const { sort_by, order, username, topic } = req.query;
-  return selectArticles(sort_by, order, username, topic)
+  const { sort_by, order, topic, author } = req.query;
+  return selectTopics(topic)
+    .then(topic => {
+      return selectUser(author);
+    })
+    .then(user => {
+      return selectArticles(sort_by, order, topic, author);
+    })
     .then(articles => {
       res.send({ articles: articles });
     })
-
     .catch(err => {
       next(err);
     });
