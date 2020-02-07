@@ -1,5 +1,5 @@
 const connection = require('../connection');
-const { checkIfArticleExists } = require('./articles.model');
+const { selectArticle } = require('./articles.model');
 
 exports.selectComments = (id, sort_by, order) => {
   if (order === undefined) order = 'desc';
@@ -18,7 +18,7 @@ exports.selectComments = (id, sort_by, order) => {
       if (sort_by !== undefined) querySoFar.orderBy(sort_by, order);
     })
     .then(result => {
-      return Promise.all([result, checkIfArticleExists(id)]);
+      return Promise.all([result, selectArticle(id)]);
     })
     .then(([result, articleExists]) => {
       if (articleExists) {
@@ -46,7 +46,7 @@ exports.addComment = (body, article_id) => {
     });
 };
 
-exports.updateComment = (id, num) => {
+exports.updateComment = (id, num = 0) => {
   if (typeof num !== 'number') {
     return Promise.reject({ status: 400, msg: 'votes need to be numerical' });
   }

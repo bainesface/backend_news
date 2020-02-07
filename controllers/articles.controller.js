@@ -1,7 +1,6 @@
 const {
   updateArticle,
   selectArticles,
-  checkIfArticleExists,
   selectArticle
 } = require('../models/articles.model');
 const { selectUser } = require('../models/users.model');
@@ -26,9 +25,7 @@ exports.patchArticle = (req, res, next) => {
     .then(updatedArticle => {
       res.send({ article: updatedArticle[0] });
     })
-    .catch(err => {
-      next(err);
-    });
+    .catch(next);
 };
 
 exports.postComment = (req, res, next) => {
@@ -40,7 +37,7 @@ exports.postComment = (req, res, next) => {
   return Promise.all([
     selectArticle(article_id),
     selectUser(username),
-    checkIfArticleExists(article_id)
+    selectArticle(article_id)
   ])
     .then(([articleData, userData]) => {
       if (userData.length !== 0) {
@@ -50,9 +47,7 @@ exports.postComment = (req, res, next) => {
     .then(addedComment => {
       res.status(201).send({ addedComment: addedComment });
     })
-    .catch(err => {
-      next(err);
-    });
+    .catch(next);
 };
 
 exports.getCommentsByArticleID = (req, res, next) => {
@@ -66,9 +61,7 @@ exports.getCommentsByArticleID = (req, res, next) => {
       });
       res.send({ comments: comments });
     })
-    .catch(err => {
-      next(err);
-    });
+    .catch(next);
 };
 
 exports.getArticles = (req, res, next) => {
@@ -83,7 +76,5 @@ exports.getArticles = (req, res, next) => {
     .then(articles => {
       res.send({ articles: articles });
     })
-    .catch(err => {
-      next(err);
-    });
+    .catch(next);
 };

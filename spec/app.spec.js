@@ -220,17 +220,17 @@ describe('/api', () => {
           expect(body.msg).to.equal('invalid id input');
         });
     });
-    it('POST: returns 404 and a relevant error message when the author in the input object cannot be found', () => {
-      const postInput = { dogface: 'very informative' };
-      return request(app)
-        .post('/api/articles/1/comments')
-        .send(postInput)
-        .expect(404)
-        .then(({ body }) => {
-          expect(body.msg).to.equal('username not found');
-        });
-    });
-    it('POST: returns 404 and a relevant error message when the comment in the input object is null', () => {
+    // it('POST: returns 404 and a relevant error message when the author in the input object cannot be found', () => {
+    //   const postInput = { dogface: 'very informative' };
+    //   return request(app)
+    //     .post('/api/articles/1/comments')
+    //     .send(postInput)
+    //     .expect(404)
+    //     .then(({ body }) => {
+    //       expect(body.msg).to.equal('username not found');
+    //     });
+    // });
+    it('POST: returns 400 and a relevant error message when the comment in the input object is null', () => {
       const postInput = { butter_bridge: null };
       return request(app)
         .post('/api/articles/1/comments')
@@ -485,16 +485,26 @@ describe('/api', () => {
           expect(body.msg).to.equal('invalid id input');
         });
     });
-    // it('PATCH: returns status 200 and returns the unchanged comment when only sent a number', () => {
-    //   const patchInput = { upmyvotes: 1 };
-    //   return request(app)
-    //     .patch('/api/comments/1')
-    //     .send(patchInput)
-    //     .expect(200)
-    //     .then(({ body }) => {
-    //       expect(body.votes).to.equal(16);
-    //     });
-    // });
+    it('PATCH: returns status 200 and returns the unchanged comment when no information in the request body', () => {
+      const patchInput = {};
+      return request(app)
+        .patch('/api/comments/1')
+        .send(patchInput)
+        .expect(200)
+        .then(({ body }) => {
+          expect(body.comment.votes).to.equal(16);
+        });
+    });
+    it('PATCH: returns status 200 and returns the unchanged comment when inc_votes property specified in the request body', () => {
+      const patchInput = { adme: 2 };
+      return request(app)
+        .patch('/api/comments/1')
+        .send(patchInput)
+        .expect(200)
+        .then(({ body }) => {
+          expect(body.comment.votes).to.equal(16);
+        });
+    });
     it('DELETE: returns status 204 and no content', () => {
       return request(app)
         .delete('/api/comments/1')

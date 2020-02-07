@@ -1,6 +1,5 @@
 exports.handlePSQLErrors = (err, req, res, next) => {
   if (err.code !== undefined) {
-    console.log('psql code', err.code);
     const PSQLcodes = {
       '22P02': { status: 400, msg: 'invalid id input' },
       '23502': { status: 400, msg: 'please add a comment' },
