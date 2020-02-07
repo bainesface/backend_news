@@ -13,7 +13,8 @@
     "test-utils": "mocha spec/utils.spec.js",
     "test": "mocha spec/app.spec.js",
     "app-test": "npm run seed-test && mocha spec/app.spec.js",
-    "dev": "nodemon listen.js"
+    "dev": "nodemon listen.js",
+    "start": "node listen.js"
   },
   "repository": {
     "type": "git",
