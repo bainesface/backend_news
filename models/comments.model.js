@@ -28,15 +28,11 @@ exports.selectComments = (id, sort_by, order) => {
     });
 };
 
-exports.addComment = (body, article_id) => {
-  let username;
-  for (key in body) {
-    username = key;
-  }
+exports.addComment = (username, body, article_id) => {
   const commentObj = {
     article_id: article_id,
     author: username,
-    body: body[username]
+    body: body
   };
   return connection('comments')
     .insert(commentObj)

@@ -191,7 +191,7 @@ describe('/api', () => {
   });
   describe('/articles/:article_id/comments', () => {
     it('POST: returns status 201 and returns the comment added', () => {
-      const postInput = { butter_bridge: 'very informative' };
+      const postInput = { username: 'butter_bridge', body: 'very informative' };
       return request(app)
         .post('/api/articles/1/comments')
         .send(postInput)
@@ -201,7 +201,7 @@ describe('/api', () => {
         });
     });
     it('POST: returns 404 and a relevant message when the article id is valid but not found', () => {
-      const postInput = { butter_bridge: 'very informative' };
+      const postInput = { username: 'butter_bridge', body: 'very informative' };
       return request(app)
         .post('/api/articles/879/comments')
         .send(postInput)
@@ -211,7 +211,7 @@ describe('/api', () => {
         });
     });
     it('POST: returns 400 and a relevant message when the article id is an invalid input', () => {
-      const postInput = { butter_bridge: 'very informative' };
+      const postInput = { username: 'butter_bridge', body: 'very informative' };
       return request(app)
         .post('/api/articles/hello/comments')
         .send(postInput)
@@ -220,18 +220,18 @@ describe('/api', () => {
           expect(body.msg).to.equal('invalid id input');
         });
     });
-    // it('POST: returns 404 and a relevant error message when the author in the input object cannot be found', () => {
-    //   const postInput = { dogface: 'very informative' };
-    //   return request(app)
-    //     .post('/api/articles/1/comments')
-    //     .send(postInput)
-    //     .expect(404)
-    //     .then(({ body }) => {
-    //       expect(body.msg).to.equal('username not found');
-    //     });
-    // });
+    it('POST: returns 404 and a relevant error message when the author in the input object cannot be found', () => {
+      const postInput = { username: 'dogface', body: 'very informative' };
+      return request(app)
+        .post('/api/articles/1/comments')
+        .send(postInput)
+        .expect(404)
+        .then(({ body }) => {
+          expect(body.msg).to.equal('username not found');
+        });
+    });
     it('POST: returns 400 and a relevant error message when the comment in the input object is null', () => {
-      const postInput = { butter_bridge: null };
+      const postInput = { username: 'butter_bridge', body: null };
       return request(app)
         .post('/api/articles/1/comments')
         .send(postInput)
@@ -547,7 +547,7 @@ describe('/api', () => {
       .get('/api')
       .expect(200)
       .then(({ body }) => {
-        expect(body.allEndpoints).to.be.an('object');
+        expect(body.endpoints).to.be.an('object');
       });
   });
   it('status: 405', () => {

@@ -30,10 +30,8 @@ exports.patchArticle = (req, res, next) => {
 
 exports.postComment = (req, res, next) => {
   const { article_id } = req.params;
-  let username;
-  for (key in req.body) {
-    username = key;
-  }
+  const { username, body } = req.body;
+
   return Promise.all([
     selectArticle(article_id),
     selectUser(username),
@@ -41,7 +39,7 @@ exports.postComment = (req, res, next) => {
   ])
     .then(([articleData, userData]) => {
       if (userData.length !== 0) {
-        return addComment(req.body, articleData.article_id);
+        return addComment(username, body, articleData.article_id);
       }
     })
     .then(addedComment => {
