@@ -66,7 +66,7 @@ exports.getArticles = (req, res, next) => {
   const { sort_by, order, topic, author } = req.query;
   return selectTopics(topic)
     .then(topic => {
-      return selectUser(author);
+      if (author !== undefined) return selectUser(author);
     })
     .then(user => {
       return selectArticles(sort_by, order, topic, author);

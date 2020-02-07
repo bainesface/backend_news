@@ -4,10 +4,7 @@ exports.selectUser = username => {
   return connection
     .select('*')
     .from('users')
-    .modify(querySoFar => {
-      if (username !== undefined)
-        querySoFar.where({ 'users.username': username });
-    })
+    .where({ username })
     .then(user => {
       if (user.length === 0) {
         return Promise.reject({
