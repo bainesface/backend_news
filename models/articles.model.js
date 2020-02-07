@@ -15,7 +15,7 @@ exports.selectArticle = id => {
     });
 };
 
-exports.updateArticle = (id, votesToAdd) => {
+exports.updateArticle = (id, votesToAdd = 0) => {
   if (typeof votesToAdd !== 'number') {
     return Promise.reject({ status: 400, msg: 'votes need to be numerical' });
   }

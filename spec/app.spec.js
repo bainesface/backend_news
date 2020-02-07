@@ -146,6 +146,17 @@ describe('/api', () => {
           expect(body.article.author).to.equal('butter_bridge');
         });
     });
+    it('PATCH: returns a status 200, returning the unchanged article object, when passed an input with no information', () => {
+      const patchInput = {};
+      return request(app)
+        .patch('/api/articles/1')
+        .send(patchInput)
+        .expect(200)
+        .then(({ body }) => {
+          expect(body.article.votes).to.equal(100);
+          expect(body.article.author).to.equal('butter_bridge');
+        });
+    });
     it('PATCH: returns a status 400 and relevant error message when the input value in non-numerical', () => {
       const patchInput = { inc_votes: 'more votes' };
       return request(app)
@@ -197,7 +208,7 @@ describe('/api', () => {
         .send(postInput)
         .expect(201)
         .then(({ body }) => {
-          expect(body.addedComment.body).to.equal('very informative');
+          expect(body.comment.body).to.equal('very informative');
         });
     });
     it('POST: returns 404 and a relevant message when the article id is valid but not found', () => {

@@ -43,7 +43,7 @@ exports.postComment = (req, res, next) => {
       }
     })
     .then(addedComment => {
-      res.status(201).send({ addedComment: addedComment });
+      res.status(201).send({ comment: addedComment });
     })
     .catch(next);
 };
