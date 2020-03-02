@@ -1,7 +1,8 @@
 const {
   updateArticle,
   selectArticles,
-  selectArticle
+  selectArticle,
+  addArticle
 } = require('../models/articles.model');
 const { selectUser } = require('../models/users.model');
 const { selectComments, addComment } = require('../models/comments.model');
@@ -32,11 +33,7 @@ exports.postComment = (req, res, next) => {
   const { article_id } = req.params;
   const { username, body } = req.body;
 
-  return Promise.all([
-    selectArticle(article_id),
-    selectUser(username),
-    selectArticle(article_id)
-  ])
+  return Promise.all([selectArticle(article_id), selectUser(username)])
     .then(([articleData, userData]) => {
       if (userData.length !== 0) {
         return addComment(username, body, articleData.article_id);
@@ -44,6 +41,16 @@ exports.postComment = (req, res, next) => {
     })
     .then(addedComment => {
       res.status(201).send({ comment: addedComment });
+    })
+    .catch(next);
+};
+
+exports.postArticle = (req, res, next) => {
+  const { username, title, topic, body } = req.body;
+
+  return addArticle(username, title, topic, body)
+    .then(addedArticle => {
+      res.status(201).send({ article: addedArticle });
     })
     .catch(next);
 };

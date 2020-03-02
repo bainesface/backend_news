@@ -248,7 +248,7 @@ describe('/api', () => {
         .send(postInput)
         .expect(400)
         .then(({ body }) => {
-          expect(body.msg).to.equal('please add a comment');
+          expect(body.msg).to.equal('please add a body of text');
         });
     });
     it('GET: returns a status 200 with an object containing an array of comment objects', () => {
@@ -430,8 +430,53 @@ describe('/api', () => {
           expect(body.msg).to.equal('topic does not exist');
         });
     });
+    it('POST: returns status 201 and returns the article added', () => {
+      const postInput = {
+        username: 'butter_bridge',
+        title: 'ballballball',
+        topic: 'paper',
+        body: 'footiefootiefootie'
+      };
+      return request(app)
+        .post('/api/articles')
+        .send(postInput)
+        .expect(201)
+        .then(({ body }) => {
+          expect(body.article.body).to.equal('footiefootiefootie');
+        });
+    });
+    it('POST: returns 404 and a relevant error message when the username in the input object cannot be found', () => {
+      const postInput = {
+        username: 'dogface',
+        title: 'ballballball',
+        topic: 'paper',
+        body: 'footiefootiefootie'
+      };
+      return request(app)
+        .post('/api/articles')
+        .send(postInput)
+        .expect(404)
+        .then(({ body }) => {
+          expect(body.msg).to.equal('username not found');
+        });
+    });
+    it('POST: returns 400 and a relevant error message when the comment in the input object is null', () => {
+      const postInput = {
+        username: 'butter_bridge',
+        title: 'ballballball',
+        topic: 'paper',
+        body: null
+      };
+      return request(app)
+        .post('/api/articles')
+        .send(postInput)
+        .expect(400)
+        .then(({ body }) => {
+          expect(body.msg).to.equal('please add a body of text');
+        });
+    });
     it('status: 405', () => {
-      const invalidMethods = ['patch', 'put', 'post', 'delete'];
+      const invalidMethods = ['patch', 'put', 'delete'];
       const methodPromises = invalidMethods.map(method => {
         return request(app)
           [method]('/api/articles')

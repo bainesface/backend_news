@@ -59,3 +59,18 @@ exports.selectArticles = (
       return articles;
     });
 };
+
+exports.addArticle = (username, title, topic, body) => {
+  const articleObj = {
+    author: username,
+    title: title,
+    topic: topic,
+    body: body
+  };
+  return connection('articles')
+    .insert(articleObj)
+    .returning('*')
+    .then(result => {
+      return result[0];
+    });
+};
