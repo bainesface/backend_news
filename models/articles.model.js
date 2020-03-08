@@ -74,3 +74,16 @@ exports.addArticle = (username, title, topic, body) => {
       return result[0];
     });
 };
+
+exports.removeArticle = id => {
+  return connection('articles')
+    .where({ 'articles.article_id': id })
+    .del()
+    .returning('*')
+    .then(deletedArticle => {
+      if (deletedArticle.length === 0) {
+        return Promise.reject({ status: 404, msg: 'article id not found' });
+      }
+      return deletedArticle;
+    });
+};

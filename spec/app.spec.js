@@ -187,8 +187,32 @@ describe('/api', () => {
           expect(body.msg).to.equal('invalid id input');
         });
     });
+    it('DELETE: returns status 204 and no content', () => {
+      return request(app)
+        .delete('/api/articles/1')
+        .expect(204)
+        .then(response => {
+          expect(response.body).to.deep.equal({});
+        });
+    });
+    it('DELETE: returns status 404 and a relevant error messgae when the comment id is valid but does not exist', () => {
+      return request(app)
+        .delete('/api/articles/98787576')
+        .expect(404)
+        .then(({ body }) => {
+          expect(body.msg).to.equal('article id not found');
+        });
+    });
+    it('DELETE: returns status 400 and the relevant error message when the comment id is an invalid input', () => {
+      return request(app)
+        .delete('/api/articles/deleteme')
+        .expect(400)
+        .then(({ body }) => {
+          expect(body.msg).to.equal('invalid id input');
+        });
+    });
     it('status: 405', () => {
-      const invalidMethods = ['put', 'post', 'delete'];
+      const invalidMethods = ['put', 'post'];
       const methodPromises = invalidMethods.map(method => {
         return request(app)
           [method]('/api/articles/:article_id')

@@ -2,7 +2,8 @@ const {
   updateArticle,
   selectArticles,
   selectArticle,
-  addArticle
+  addArticle,
+  removeArticle
 } = require('../models/articles.model');
 const { selectUser } = require('../models/users.model');
 const { selectComments, addComment } = require('../models/comments.model');
@@ -81,6 +82,15 @@ exports.getArticles = (req, res, next) => {
     })
     .then(articles => {
       res.send({ articles: articles });
+    })
+    .catch(next);
+};
+
+exports.deleteArticle = (req, res, next) => {
+  const { article_id } = req.params;
+  return removeArticle(article_id)
+    .then(() => {
+      res.status(204).send();
     })
     .catch(next);
 };
