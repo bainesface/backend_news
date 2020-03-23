@@ -242,7 +242,7 @@ describe('/api', () => {
         .send(postInput)
         .expect(404)
         .then(({ body }) => {
-          expect(body.msg).to.equal('input not found');
+          expect(body.msg).to.equal('article id not found');
         });
     });
     it('POST: returns 400 and a relevant message when the article id is an invalid input', () => {
@@ -262,7 +262,7 @@ describe('/api', () => {
         .send(postInput)
         .expect(404)
         .then(({ body }) => {
-          expect(body.msg).to.equal('input not found');
+          expect(body.msg).to.equal('username not found');
         });
     });
     it('POST: returns 400 and a relevant error message when the comment in the input object is null', () => {
@@ -481,7 +481,7 @@ describe('/api', () => {
         .send(postInput)
         .expect(404)
         .then(({ body }) => {
-          expect(body.msg).to.equal('input not found');
+          expect(body.msg).to.equal('username not found');
         });
     });
     it('POST: returns 400 and a relevant error message when the comment in the input object is null', () => {

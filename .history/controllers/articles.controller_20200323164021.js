@@ -34,11 +34,19 @@ exports.postComment = (req, res, next) => {
   const { article_id } = req.params;
   const { username, body } = req.body;
 
-  return addComment(username, body, article_id)
-    .then(addedComment => {
-      res.status(201).send({ comment: addedComment });
-    })
-    .catch(next);
+  // return Promise.all([selectArticle(article_id), selectUser(username)])
+  //   .then(([articleData, userData]) => {
+  //     if (userData.length !== 0) {
+  //       return
+  //       }
+  return (
+    addComment(username, body, articleData.article_id)
+      //})
+      .then(addedComment => {
+        res.status(201).send({ comment: addedComment });
+      })
+      .catch(next)
+  );
 };
 
 exports.postArticle = (req, res, next) => {
